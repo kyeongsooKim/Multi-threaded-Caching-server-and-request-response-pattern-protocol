@@ -5,7 +5,7 @@
 This project is academic project for becoming familiar with low-level POSIX threads, multi-threading safety, concurrency guarantees, and networking. The project is originally designed by Prof. Jennifer in Stony Brook University, but all the actual code except base code is made by me.
 
 In this project, First of all, I implemented a concurrent queue using the producers/consumers locking pattern and a concurrent hash map using the readers/writers locking pattern. Then , built an in-memory, multi-threaded, caching server similar to [__Memcached__](https://memcached.org/), through those data structures I made. 
-Lastly I built simple protocol using this server. The entire program is multi-threading safe and can handle all the external errors such as connections getting closed, client programs getting killed, and a blocking syscall being interrupted.
+Lastly I built request-response pattern protocol using this server. The entire program is multi-threading safe and can handle all the external errors such as connections getting closed, client programs getting killed, and a blocking syscall being interrupted.
 
 ,which means 
 the program handles:
@@ -25,12 +25,12 @@ NUM_WORKERS        The number of worker threads used to service requests.
 PORT_NUMBER        Port number to listen on for incoming connections.
 MAX_ENTRIES        The maximum number of entries that can be stored in `cream`'s underlying data store.
 ```
-
+> To test client side, you can check client side in "client" directory.
 ## File Structure
 
 
 ```
-repo
+server
 ├── Makefile
 ├── Makefile.config
 ├── include
@@ -167,6 +167,7 @@ MAX_ENTRIES        The maximum number of entries that can be stored in `cream`'s
 ```
 
 `cream` will service a request for any client that connects to it.
+
 `cream` will service **ONE** request per connection, and will terminate any connection after it has fulfilled and replied to its request.
 
 On startup `cream` will spawn `NUM_WORKERS` worker threads for the lifetime of the program, bind a socket to the port specified by `PORT_NUMBER`, and infinitely listen on the bound socket for incoming connections.
