@@ -16,6 +16,8 @@ the program handles:
 
 ## USAGE
 
+First compile the server with `make clean all`.
+
 ```
 ./cream [-h] NUM_WORKERS PORT_NUMBER MAX_ENTRIES
 -h                 Displays this help menu and returns EXIT_SUCCESS.
