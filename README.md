@@ -111,10 +111,6 @@ The map starts looking for the key at the computed index and continues searching
 > Using the locks and `num_readers` variable in the `hashmap_t` struct, it follows the readers/writers pattern.
 
 
-Here is a diagram to visualize the `hashmap_t` struct:
-
-![hashmap_diagram](diagrams/hashmap_diagram.png)
-
 
 ### Operations
 - `hashmap_t *create_map(uint32_t capacity, hash_func_f hash_function, destructor_f destroy_function)`
@@ -171,9 +167,6 @@ MAX_ENTRIES        The maximum number of entries that can be stored in `cream`'s
 `cream` will service a request for any client that connects to it.
 `cream` will service **ONE** request per connection, and will terminate any connection after it has fulfilled and replied to its request.
 
-![Server Diagram](./diagrams/server.png)
-
-The diagram above shows how `cream` handles client requests.
 On startup `cream` will spawn `NUM_WORKERS` worker threads for the lifetime of the program, bind a socket to the port specified by `PORT_NUMBER`, and infinitely listen on the bound socket for incoming connections.
 Clients will attempt to establish a connection with `cream` which will be accepted in `cream`'s main thread.
 After accepting the client's connection `cream`'s main thread adds the accepted socket to a **request queue** so that a blocked worker thread is unblocked to service the client's request.
