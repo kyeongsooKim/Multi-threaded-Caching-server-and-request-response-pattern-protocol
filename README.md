@@ -155,6 +155,8 @@ The map starts looking for the key at the computed index and continues searching
 
 The server that I implemented in this project (named "CREAM") is for the general purpose in-memory key-value caching service through concurrent data structures implemented in the previous partI and II.
 
+![](server_diagram.png)
+
 
 ### USAGE
 
