@@ -26,33 +26,6 @@ PORT_NUMBER        Port number to listen on for incoming connections.
 MAX_ENTRIES        The maximum number of entries that can be stored in `cream`'s underlying data store.
 ```
 > To test client side, you can check client side in "client" directory.
-## File Structure
-
-
-```
-server
-├── Makefile
-├── Makefile.config
-├── include
-│   ├── const.h
-│   ├── cream.h
-│   ├── debug.h
-│   ├── extracredit.h
-│   ├── hashmap.h
-│   ├── queue.h
-│   └── utils.h
-├── src
-│   ├── cream.c
-│   ├── extracredit.c
-│   ├── hashmap.c
-│   ├── queue.c
-│   └── utils.c
-└── tests
-    ├── extracredit_tests.c
-    ├── hashmap_tests.c
-    └── queue_tests.c
-```
-
 
 
 
@@ -65,26 +38,6 @@ The `queue_t` struct provided in `queue.h` includes a mutex and a semaphore for 
 
 > All of the functions is multi-threading safe. Any number of threads is able to call these functions without any data corruption.
 
-
-### Operations
-- `queue_t *create_queue(void);`
-    - This function `calloc(3)`s a new instance of `queue_t` and initializes all locks and semaphores in the `queue_t` struct.
-    - *Returns:* A valid pointer to an initialized `queue_t` instance or `NULL`.
-
-- `bool invalidate_queue(queue_t *self, item_destructor_f destroy_function);`
-    - This function will invalidate the `queue_t` instance pointed to by `self`.
-    - It will call `destroy_function` on all remaining items in the queue and `free(3)` the `queue_node_t` instances.
-    - It will set the `invalid` flag in `self` to true to indicate that the queue is not usable.
-    - *Returns:* `true` if the invalidation was successful, `false` otherwise.
-
-- `bool enqueue(queue_t *self, void *item);`
-    - This function `calloc(3)`s a new `queue_node_t` instance to add to the queue.
-    - *Returns:* `true` if the operation was successful, `false` otherwise.
-
-- `void *dequeue(queue_t *self);`
-    - Removes the item at the front of the queue pointed to by `self`.
-    - This function blocks until an item is available to dequeue.
-    - *Returns:* A pointer to the item stored at the front of the queue.
 
 
 ## Part II: Concurrent Hash map
@@ -112,42 +65,6 @@ The map starts looking for the key at the computed index and continues searching
 
 > Using the locks and `num_readers` variable in the `hashmap_t` struct, it follows the readers/writers pattern.
 
-
-
-### Operations
-- `hashmap_t *create_map(uint32_t capacity, hash_func_f hash_function, destructor_f destroy_function)`
-    - This will `calloc(3)` a new instance of `hashmap_t` that manages an array of `capacity` `map_node_t` instances.
-    - *Returns:*  A valid pointer to a `hashmap_t` instance, or `NULL`.
-
-- `bool put(hashmap_t *self, map_key_t key, map_val_t val, bool force)`
-    - This will insert a key/value pair into the hash map pointed to by `self`.
-    - If the key already exists in the map, update the value associated with it and return `true`.
-    - If the map is full and `force` is `true`, overwrite the entry at the index given by `get_index` and return `true`.
-    - *Returns:* `true` if the operation was successful, `false` otherwise.
-
-    
-
-- `map_val_t get(hashmap_t *self, map_key_t key)`
-    - Retrieves the `map_val_t` corresponding to `key`.
-    - *Returns:* The corresponding value.
-      If `key` is not found in the map, the `map_val_t` instance will contain a `NULL` pointer and a `val_len` of 0.
-
-- `map_node_t delete(hashmap_t *self, map_key_t key)`
-    - Removes the entry with key `key`.
-    - *Returns:* The removed `map_node_t` instance
-
-- `bool clear_map(hashmap_t *self)`
-    - Clears all remaining entries in the map.
-    - It will call the `destroy_function` in `self` on every remaining item.
-    - It doesn't free any pointers or destroy any locks in `self`.
-    - *Returns:* `true` if the operation was successful, `false` otherwise.
-
-
-- `bool invalidate_map(hashmap_t *self)`
-    - This will invalidate the `hashmap_t` instance pointed to by `self`.
-    - It will call the `destroy_function` in `self` on every remaining item.
-    - It doesn't free `self` or destroy any locks in `self`.
-    - *Returns:* `true` if the invalidation was successful, `false` otherwise.
 
 
 
