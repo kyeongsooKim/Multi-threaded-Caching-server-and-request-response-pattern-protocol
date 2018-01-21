@@ -25,7 +25,7 @@ NUM_WORKERS        The number of worker threads used to service requests.
 PORT_NUMBER        Port number to listen on for incoming connections.
 MAX_ENTRIES        The maximum number of entries that can be stored in `cream`'s underlying data store.
 ```
-> To test client side, you can check client side in "client" directory.
+> To test client side, check README.md in "client" directory.
 
 
 
@@ -82,7 +82,7 @@ After accepting the client's connection `cream`'s main thread adds the accepted 
 Once the worker thread has serviced the request it will send a response to the client, close the connection, and block until it has to service another request.
 
 
-## Personal Protocol
+## Part IV: Personal Protocol
 For better usage, I implemented simple protocol over a streaming socket using the request-response pattern. It is a very basic protocol as the client will send only one message (a request) to the server, and the server will send only one message (a response) back to the client. Both messages (request and response) have a unique header which is prepended to the message's body. The fields in the request and response headers are used to denote the type and content of the message being sent.
 Without the use of a message header, the receiver of the message has no idea what it is receiving.
 

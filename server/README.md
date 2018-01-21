@@ -25,34 +25,7 @@ NUM_WORKERS        The number of worker threads used to service requests.
 PORT_NUMBER        Port number to listen on for incoming connections.
 MAX_ENTRIES        The maximum number of entries that can be stored in `cream`'s underlying data store.
 ```
-> To test client side, you can check client side in "client" directory.
-## File Structure
-
-
-```
-server
-├── Makefile
-├── Makefile.config
-├── include
-│   ├── const.h
-│   ├── cream.h
-│   ├── debug.h
-│   ├── extracredit.h
-│   ├── hashmap.h
-│   ├── queue.h
-│   └── utils.h
-├── src
-│   ├── cream.c
-│   ├── extracredit.c
-│   ├── hashmap.c
-│   ├── queue.c
-│   └── utils.c
-└── tests
-    ├── extracredit_tests.c
-    ├── hashmap_tests.c
-    └── queue_tests.c
-```
-
+> To test client side, check README.md in "client" directory.
 
 
 
@@ -66,94 +39,27 @@ The `queue_t` struct provided in `queue.h` includes a mutex and a semaphore for 
 > All of the functions is multi-threading safe. Any number of threads is able to call these functions without any data corruption.
 
 
-### Operations
-- `queue_t *create_queue(void);`
-    - This function `calloc(3)`s a new instance of `queue_t` and initializes all locks and semaphores in the `queue_t` struct.
-    - *Returns:* A valid pointer to an initialized `queue_t` instance or `NULL`.
-
-- `bool invalidate_queue(queue_t *self, item_destructor_f destroy_function);`
-    - This function will invalidate the `queue_t` instance pointed to by `self`.
-    - It will call `destroy_function` on all remaining items in the queue and `free(3)` the `queue_node_t` instances.
-    - It will set the `invalid` flag in `self` to true to indicate that the queue is not usable.
-    - *Returns:* `true` if the invalidation was successful, `false` otherwise.
-
-- `bool enqueue(queue_t *self, void *item);`
-    - This function `calloc(3)`s a new `queue_node_t` instance to add to the queue.
-    - *Returns:* `true` if the operation was successful, `false` otherwise.
-
-- `void *dequeue(queue_t *self);`
-    - Removes the item at the front of the queue pointed to by `self`.
-    - This function blocks until an item is available to dequeue.
-    - *Returns:* A pointer to the item stored at the front of the queue.
-
 
 ## Part II: Concurrent Hash map
 
-A hash map is a generic data structure that allows for insertion, searching, and deletion in expected constant time.
-Hash maps store key-value pairs. Each key is unique, but values can be repeated.
-I implement an [__open-addressed hash map__](http://www.algolist.net/Data_structures/Hash_table/Open_addressing) backed by an array that uses linear probing to deal with collisions.
-> My hashmap supports the `put`, `get`, and `remove` operations.
 
-> It computes the index for a given key using the formula `index = hash(key) % table_capacity`, where `hash()` is a hashing function that returns an unsigned integer. To insert, the map tries to put the key/value pair at the computed index.
+I implement an [__open-addressed hash map__](http://www.algolist.net/Data_structures/Hash_table/Open_addressing) backed by an array that uses linear probing to deal with collisions. It supports the `put`, `get`, and `remove` operations and follows the readers/writers pattern by using the locks and `num_readers` variable in the `hashmap_t` struct.
 
-> Linear probing is used to deal with hash collisions (i.e. when two or more keys hash to the same index).
-In this case, the map will search larger indexes sequentially, wrapping around the array if necessary, until an empty slot is found. The new entry will be inserted at this empty slot.
-
-> Searching for a value given a key is similar. First, the starting index is computed using the previous formula.
-The map starts looking for the key at the computed index and continues searching sequentially through the map until the key is found, it gets back to the original index, or an empty slot is found. In the latter two situations, the map will conclude that the key is not present.
-
-> It is incorrect to just remove the key/value pair from the array, leaving behind an empty slot. So my map sets a special tombstone flag at every deleted index. When searching, the map can skip over a tombstone and continue searching at the next index. When inserting, the map can treat the tombstone as an empty slot and insert a new key-value pair.
+> My hashmap sets a special tombstone flag at every deleted index. When searching, the map can skip over a tombstone and continue searching at the next index. When inserting, the map can treat the tombstone as an empty slot and insert a new key-value pair.
 
 
-> It follows Least Recently Used (LRU) replacement policy. When the map is full and a `put` call is made with the `force` parameter set to `true`, so that the least recently used node is overwritten. If the map is full and `force` is set to `false`, set `errno` to `ENOMEM` and return `false` as usual. Both `put` and `get` operations count towards a node being recently used.
-
+> It follows Least Recently Used (LRU) replacement policy. 
 
 > All operations on the hash map is multi-threading safe. This will allow multiple threads to access the map concurrently without data corruption.
 
-> Using the locks and `num_readers` variable in the `hashmap_t` struct, it follows the readers/writers pattern.
-
-
-
-### Operations
-- `hashmap_t *create_map(uint32_t capacity, hash_func_f hash_function, destructor_f destroy_function)`
-    - This will `calloc(3)` a new instance of `hashmap_t` that manages an array of `capacity` `map_node_t` instances.
-    - *Returns:*  A valid pointer to a `hashmap_t` instance, or `NULL`.
-
-- `bool put(hashmap_t *self, map_key_t key, map_val_t val, bool force)`
-    - This will insert a key/value pair into the hash map pointed to by `self`.
-    - If the key already exists in the map, update the value associated with it and return `true`.
-    - If the map is full and `force` is `true`, overwrite the entry at the index given by `get_index` and return `true`.
-    - *Returns:* `true` if the operation was successful, `false` otherwise.
-
-    
-
-- `map_val_t get(hashmap_t *self, map_key_t key)`
-    - Retrieves the `map_val_t` corresponding to `key`.
-    - *Returns:* The corresponding value.
-      If `key` is not found in the map, the `map_val_t` instance will contain a `NULL` pointer and a `val_len` of 0.
-
-- `map_node_t delete(hashmap_t *self, map_key_t key)`
-    - Removes the entry with key `key`.
-    - *Returns:* The removed `map_node_t` instance
-
-- `bool clear_map(hashmap_t *self)`
-    - Clears all remaining entries in the map.
-    - It will call the `destroy_function` in `self` on every remaining item.
-    - It doesn't free any pointers or destroy any locks in `self`.
-    - *Returns:* `true` if the operation was successful, `false` otherwise.
-
-
-- `bool invalidate_map(hashmap_t *self)`
-    - This will invalidate the `hashmap_t` instance pointed to by `self`.
-    - It will call the `destroy_function` in `self` on every remaining item.
-    - It doesn't free `self` or destroy any locks in `self`.
-    - *Returns:* `true` if the invalidation was successful, `false` otherwise.
 
 
 
 ## Part III : Multi-threaded LRU Caching server
 
 The server that I implemented in this project (named "CREAM") is for the general purpose in-memory key-value caching service through concurrent data structures implemented in the previous partI and II.
+
+![](server_diagram.png)
 
 
 ### USAGE
@@ -176,8 +82,8 @@ After accepting the client's connection `cream`'s main thread adds the accepted 
 Once the worker thread has serviced the request it will send a response to the client, close the connection, and block until it has to service another request.
 
 
-### Personal Protocol
-For better usuage, I implemented simple protocol over a streaming socket using the request-response pattern. It is a very basic protocol as the client will send only one message (a request) to the server, and the server will send only one message (a response) back to the client. Both messages (request and response) have a unique header which is prepended to the message's body. The fields in the request and response headers are used to denote the type and content of the message being sent.
+## Part IV: Personal Protocol
+For better usage, I implemented simple protocol over a streaming socket using the request-response pattern. It is a very basic protocol as the client will send only one message (a request) to the server, and the server will send only one message (a response) back to the client. Both messages (request and response) have a unique header which is prepended to the message's body. The fields in the request and response headers are used to denote the type and content of the message being sent.
 Without the use of a message header, the receiver of the message has no idea what it is receiving.
 
 > Request–response is a message exchange pattern in which a requester sends a  message to a responder system which receives, processes, and responds to the request. This is a simple, but powerful messaging pattern which allows two applications to have a conversation with one another over a connection.
